@@ -8,7 +8,7 @@ include('result.php');
 
 class BCConnect{
 
-	public $baseUrl = "http://localhost:8080/api/";
+	public $baseUrl = "https://tst-brightcenter.trifork.nl/api/";
 
 	public $username;
 	public $password;
