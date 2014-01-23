@@ -1,6 +1,5 @@
 <?php
 
-include('httpful.phar');
 include('group.php');
 include('student.php');
 include('auth.php');
@@ -26,15 +25,24 @@ class BCConnect{
 
 
 		$url = $this->baseUrl . "groups";
-		$response = \Httpful\Request::get($url)->authenticateWith($this->username, $this->password)->send();
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL,$url);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
+		$status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);   //get status code
+		$response=curl_exec ($ch);
+		curl_close ($ch);
 
-		//Check if we got some JSON back, if not return an error message.
-		$headers = $response->_parseHeaders($response->raw_headers);
-		if($headers['Content-Type'] != "application/json;charset=UTF-8"){
-			return "Something went wrong with fetching the groups! Check your username and password.";
+
+
+		$groups = json_decode($response);
+
+		if(count($response) == 0){
+			return "Something went wrong with loging in. Please check username/pas";
 		}
 
-		$groups = $response->body;
 		$newGroups = array();
 		for($i = 0; $i < count($groups); $i++){
 			$groupFromServer = $groups[$i];
@@ -65,15 +73,20 @@ class BCConnect{
 	*/
 	function getResultsOfStudentForAssessment($assessmentId, $studentId){
 		$url = $this->baseUrl . "assessment/" . $assessmentId . "/students/" . $studentId . "/assessmentItemResult";
-		$response = \Httpful\Request::get($url)->authenticateWith($this->username, $this->password)->send();
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL,$url);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($ch, CURLOPT_USERPWD, $this->username . ":" . $this->password);
+		$status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);   //get status code
+		$response=curl_exec ($ch);
+		curl_close ($ch);
+		$resultsFromServer = json_decode($response);
 
-		//Check if we got some JSON back, if not return an error message.
-		$headers = $response->_parseHeaders($response->raw_headers);
-		if($headers['Content-Type'] != "application/json;charset=UTF-8"){
-			return "Something went wrong with fetching the results! Check the assessmentId or studentId!";
+		if(count($resultsFromServer) == 0){
+			return "No assessments found, are you sure the assessmentId/studentId are right?";
 		}
-
-		$resultsFromServer = $response->body;
 
 		$allResults = array();
 		for ($i=0; $i < count($resultsFromServer); $i++) { 
@@ -127,36 +140,30 @@ class BCConnect{
 			return "date is null";
 		}
 		$url = $this->baseUrl . "assessment/" . $assessmentId . "/student/" . $studentId . "/assessmentItemResult/" . $questionId;
-		$body = '{"score" : ' . $score . ', "duration": ' . $duration .	', "completionStatus": "' . $completionStatus .'", "date": ' . $date .'}';
-		$response = \Httpful\Request::post($url)
-									->sendsJson()
-									->authenticateWith($this->username, $this->password)->body($body)
-									->send();	
-		if(strlen($response->body) > 0){
+		$body = '{"score" : ' . $score . ', "duration": ' . $duration .	', "completionStatus": "' . $completionStatus .'", "date": ' . $date .'}';                                                                               
+		 
+		$ch = curl_init($url);                                                                      
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $body);                                                                  
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($ch, CURLOPT_USERPWD, $this->username . ":" . $this->password);                                                                    
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
+		    'Content-Type: application/json',                                                                                
+		    'Content-Length: ' . strlen($body))                                                                       
+		);                                                                                                                   
+		 
+		$result = curl_exec($ch);
+		curl_close($ch);
+
+		if(strlen($result) > 0){
 			return "Something went wrong with posting a result :( One or more parameters have the wrong value.";
 		}
-		return true;
+		return "Result is posted to the server!";
 
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 ?>
