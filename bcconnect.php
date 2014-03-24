@@ -7,7 +7,7 @@ include('result.php');
 
 class BCConnect{
 
-	public $baseUrl = "https://tst-brightcenter.trifork.nl/api/";
+	public $baseUrl = "http://www.brightcenter.nl/dashboard/api/";
 
 	public $username;
 	public $password;
@@ -23,7 +23,6 @@ class BCConnect{
 		$this->username = $username;
 		$this->password = $password;
 
-
 		$url = $this->baseUrl . "groups";
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL,$url);
@@ -34,8 +33,6 @@ class BCConnect{
 		$status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);   //get status code
 		$response=curl_exec ($ch);
 		curl_close ($ch);
-
-
 
 		$groups = json_decode($response);
 
