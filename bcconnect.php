@@ -7,7 +7,7 @@ include('result.php');
 
 class BCConnect{
 
-	public $baseUrl = "http://www.brightcenter.nl/dashboard/api/";
+	public $baseUrl = "https://brightcenter.nl/dashboard/api/";
 
 	public $username;
 	public $password;
